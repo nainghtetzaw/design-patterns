@@ -52,3 +52,9 @@ data class UserProfile(
         }
     }
 }
+
+fun buildUserProfile(
+    username: String,
+    email: String,
+    builder: UserProfile.Companion.Builder.() -> UserProfile.Companion.Builder = { this }
+): UserProfile = builder(UserProfile.Companion.Builder(username, email)).build()
