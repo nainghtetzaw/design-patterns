@@ -8,9 +8,9 @@ fun <T> basicWave(block: suspend WaveCollector<T>.() -> Unit): Wave<T> {
     return BasicWave(block)
 }
 
-//fun <T, R> Wave<T>.map(transform: (T) -> R): Wave<T> {
-//    return MapWave<R>(transform)
-//}
+fun <T, R> Wave<T>.map(transform: (T) -> R): Wave<R> {
+    return MapWave(this, transform)
+}
 
 suspend fun <T> Wave<T>.collect(block: suspend (T) -> Unit) {
     val collector = BasicWaveCollector(block)
@@ -18,22 +18,21 @@ suspend fun <T> Wave<T>.collect(block: suspend (T) -> Unit) {
 }
 
 private class BasicWave <T> (
-    private val block: suspend WaveCollector<T>.() -> Unit
+    private val action: suspend WaveCollector<T>.() -> Unit
 ): Wave<T> {
     override suspend fun collect(collector: WaveCollector<T>) {
-        block(collector)
+        action(collector)
     }
 }
 
-//private class MapWave <R> (
-//    private val transform: WaveCollector<R>.() -> Unit
-//): Wave<R> {
-//    override suspend fun collect(collector: WaveCollector<R>) {
-//        transform(collector)
-//    }
-//}
-
-
-
-
+private class MapWave <in T, out R> (
+    private val upstream: Wave<T>,
+    private val transform: (T) -> R
+): Wave<R> {
+    override suspend fun collect(collector: WaveCollector<R>) {
+        upstream.collect {
+            collector.emit(transform(it))
+        }
+    }
+}
 
